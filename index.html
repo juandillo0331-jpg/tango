@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>BNUS - División Tango - Tiempo Real</title>
+<title>Base Naval Ushuaia 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -62,6 +62,8 @@ table{width:100%;border-collapse:collapse;min-width:480px;}
 thead{background:var(--bg3);}
 th{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.12em;color:var(--muted);padding:0.7rem 0.9rem;text-align:left;border-bottom:1px solid var(--border);}
 td{padding:0.6rem 0.9rem;font-size:0.85rem;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.02);}
 .jerarquia{font-family:var(--font-mono);font-size:0.78rem;color:var(--accent2);font-weight:500;}
 .nombre-cell{font-weight:500;}
 .estado-select{font-family:var(--font-mono);font-size:0.72rem;padding:4px 7px;border:1px solid var(--border);cursor:pointer;width:100%;transition:all .2s;background:var(--bg3);color:var(--text);}
@@ -69,6 +71,27 @@ td{padding:0.6rem 0.9rem;font-size:0.85rem;border-bottom:1px solid var(--border)
 .estado-select.ausente{background:var(--red);border-color:var(--red-border);color:var(--red-text);}
 .btn{font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.06em;padding:0.55rem 1.2rem;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;transition:all .2s;}
 .btn:hover{background:var(--accent);color:var(--bg);}
+.btn-sm{padding:0.3rem 0.8rem;font-size:0.65rem;}
+.btn-red{border-color:var(--red-border);color:var(--red-text);}
+.btn-red:hover{background:var(--red-border);color:#fff;}
+.btn-muted{border-color:var(--border);color:var(--muted);}
+.btn-muted:hover{border-color:var(--text);color:var(--text);}
+.btn-row{display:flex;gap:0.75rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--accent);padding:1.5rem;width:520px;max-width:100%;max-height:88vh;overflow-y:auto;}
+.modal h3{font-family:var(--font-display);font-size:1.2rem;letter-spacing:0.08em;color:var(--accent);margin-bottom:1rem;}
+.modal-row{display:flex;gap:0.5rem;margin-bottom:0.6rem;align-items:center;flex-wrap:wrap;}
+.modal-input{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.78rem;padding:0.45rem 0.7rem;flex:1;outline:none;min-width:80px;}
+.modal-input:focus{border-color:var(--accent);}
+.modal-btn-row{display:flex;gap:0.5rem;margin-top:1rem;justify-content:flex-end;}
+.person-edit-row{display:flex;gap:0.4rem;align-items:center;padding:0.4rem 0;border-bottom:1px solid var(--border);}
+.person-edit-row:last-child{border-bottom:none;}
+.person-edit-row input{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.75rem;padding:3px 6px;outline:none;}
+.person-edit-row input:focus{border-color:var(--accent);}
+.del-row-btn{background:transparent;border:1px solid var(--red-border);color:var(--red-text);font-size:0.65rem;padding:2px 7px;cursor:pointer;font-family:var(--font-mono);flex-shrink:0;}
+.del-row-btn:hover{background:var(--red-border);color:#fff;}
+.gen-section{margin-bottom:2rem;}
+.gen-title{font-family:var(--font-display);font-size:1rem;letter-spacing:0.1em;color:var(--accent);margin-bottom:0.8rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border);}
 .div-summary{background:var(--bg2);border:1px solid var(--border);padding:1rem 1.2rem;margin-bottom:0.4rem;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;align-items:center;gap:0.8rem;}
 .div-name{font-family:var(--font-display);font-size:0.95rem;letter-spacing:0.06em;}
 .div-stat{text-align:center;}
@@ -80,43 +103,69 @@ td{padding:0.6rem 0.9rem;font-size:0.85rem;border-bottom:1px solid var(--border)
 .ausente-item:last-child{border-bottom:none;}
 .ausente-jer{font-family:var(--font-mono);font-size:0.75rem;color:var(--accent2);min-width:55px;}
 .ausente-div-lbl{font-family:var(--font-mono);font-size:0.62rem;color:var(--muted);margin-left:auto;}
-@media print{ .no-print{display:none!important;} }
+.informe-item{background:var(--bg2);border:1px solid var(--border);margin-bottom:0.5rem;padding:1rem 1.2rem;}
+.informe-fecha{font-family:var(--font-display);font-size:0.95rem;letter-spacing:0.06em;color:var(--accent);margin-bottom:0.4rem;}
+.informe-stats{display:flex;gap:1.5rem;font-family:var(--font-mono);font-size:0.75rem;flex-wrap:wrap;}
+@media print{
+  body{background:#fff!important;color:#000!important;}
+  .nav,.btn-row,.logout-btn,.no-print{display:none!important;}
+  .header{background:#fff!important;border-bottom:2px solid #8B6914;}
+  .header-title{color:#8B6914!important;}
+  .header-sub,.header-date{color:#555!important;}
+  .content{padding:0.5rem!important;}
+  .stats-bar{background:#bbb!important;}
+  .stat{background:#f4f4f4!important;}
+  .stat-val.green{color:#15803d!important;}
+  .stat-val.red{color:#dc2626!important;}
+  .stat-val.gold{color:#92400e!important;}
+  .gen-title,.division-title{color:#333!important;}
+  .div-summary,.ausentes-box{background:#f9f9f9!important;border:1px solid #ccc!important;}
+  .ausentes-group-title{color:#92400e!important;background:#fef3c7!important;border-left:2px solid #92400e!important;}
+  .ausente-jer{color:#92400e!important;}
+  .ausente-div-lbl{color:#666!important;}
+  .div-stat .lbl,.stat-lbl{color:#666!important;}
+}
 </style>
 </head>
 <body>
 
 <div class="header">
   <div>
-    <div class="header-title">BASE NAVAL USHUAIA</div>
-    <div class="header-sub">SISTEMA DE PRESENTISMO — DIVISIÓN TANGO</div>
+    <div class="header-title">BASE NAVAL USHUAIA 2026</div>
+    <div class="header-sub">SISTEMA DE CONTROL DE PRESENTISMO — DIVISIÓN TANGO</div>
   </div>
   <div class="header-date" id="header-date"></div>
 </div>
 
 <div id="login-screen">
   <div class="login-card">
-    <h2>ACCESO SEGURO</h2>
-    <p>SELECCIONE SU SECCIÓN</p>
+    <h2>ACCESO AL SISTEMA</h2>
+    <p>SELECCIONE SU SECCIÓN E INGRESE SU CONTRASEÑA</p>
 
-    <button class="user-btn" onclick="selectSection('general',this)" style="margin-bottom:1rem; border-left: 3px solid var(--accent2);">
-      <div class="role">CONTROL GENERAL</div>
-      <div class="name">Encargado de División</div>
+    <div class="login-section-label">▎ ENCARGADO GENERAL</div>
+    <button class="user-btn" id="btn-sec-general" onclick="selectSection('general',this)" style="width:100%;margin-bottom:0.5rem;">
+      <div class="role">ENCARGADO DIV TANGO</div>
+      <div class="name">Encargado General</div>
     </button>
 
-    <div class="login-section-label">▎ SECCIONES</div>
+    <hr class="login-divider"/>
+
+    <div class="login-section-label">▎ ENCARGADOS DE DIVISIÓN</div>
     <div class="login-btn-grid">
-      <button class="user-btn" onclick="selectSection('Electricidad',this)"><div class="role">SECCIÓN</div><div class="name">Electricidad</div></button>
-      <button class="user-btn" onclick="selectSection('Electrónica',this)"><div class="role">SECCIÓN</div><div class="name">Electrónica</div></button>
-      <button class="user-btn" onclick="selectSection('Armas',this)"><div class="role">SECCIÓN</div><div class="name">Armas</div></button>
-      <button class="user-btn" onclick="selectSection('Mecánica',this)"><div class="role">SECCIÓN</div><div class="name">Mecánica</div></button>
-      <button class="user-btn" onclick="selectSection('Automotores',this)"><div class="role">SECCIÓN</div><div class="name">Automotores</div></button>
-      <button class="user-btn" onclick="selectSection('Auxiliares',this)"><div class="role">SECCIÓN</div><div class="name">Auxiliares</div></button>
+      <button class="user-btn" onclick="selectSection('Electricidad',this)"><div class="role">DIVISIÓN</div><div class="name">Electricidad</div></button>
+      <button class="user-btn" onclick="selectSection('Electrónica',this)"><div class="role">DIVISIÓN</div><div class="name">Electrónica</div></button>
+      <button class="user-btn" onclick="selectSection('Armas',this)"><div class="role">DIVISIÓN</div><div class="name">Armas</div></button>
+      <button class="user-btn" onclick="selectSection('Mecánica',this)"><div class="role">DIVISIÓN</div><div class="name">Mecánica</div></button>
+      <button class="user-btn" onclick="selectSection('Automotores',this)"><div class="role">DIVISIÓN</div><div class="name">Automotores</div></button>
+      <button class="user-btn" onclick="selectSection('Lucha Contra Incendio',this)"><div class="role">DIVISIÓN</div><div class="name">Luc. Contra Incendio</div></button>
+      <button class="user-btn" style="grid-column:span 2;" onclick="selectSection('Auxiliares',this)"><div class="role">DIVISIÓN</div><div class="name">Auxiliares</div></button>
     </div>
 
-    <div id="pwd-area" style="margin-top:1.5rem;display:none;">
+    <div id="pwd-area" style="margin-top:1rem;display:none;">
+      <div style="font-family:var(--font-mono);font-size:0.62rem;color:var(--muted);margin-bottom:0.4rem;letter-spacing:0.08em;" id="pwd-label"></div>
       <div class="pwd-row">
-        <input class="pwd-input" type="password" id="pwd-field" placeholder="Contraseña..."/>
-        <button class="pwd-submit" onclick="submitPwd()">ENTRAR</button>
+        <input class="pwd-input" type="password" id="pwd-field" placeholder="Contraseña..." onkeydown="if(event.key==='Enter')submitPwd()"/>
+        <button class="pwd-submit" onclick="submitPwd()">INGRESAR</button>
       </div>
       <div class="pwd-error" id="pwd-error">Contraseña incorrecta.</div>
     </div>
@@ -125,41 +174,132 @@ td{padding:0.6rem 0.9rem;font-size:0.85rem;border-bottom:1px solid var(--border)
 
 <div id="app">
   <div class="nav">
-    <button class="nav-btn active" onclick="showSection('main')">PANEL PRINCIPAL</button>
+    <button class="nav-btn active" id="nav-main" onclick="showSection('main')">PRESENTISMO</button>
+    <button class="nav-btn" id="nav-informe" onclick="showSection('informe')" style="display:none;">INFORME HISTÓRICO</button>
     <div class="nav-spacer"></div>
     <span class="nav-user" id="nav-user"></span>
-    <button class="logout-btn" onclick="location.reload()">SALIR</button>
+    <button class="logout-btn" onclick="logout()">SALIR</button>
   </div>
-
   <div class="content">
+
     <div id="section-main">
       <div class="division-header">
         <div class="division-title" id="div-title"></div>
-        <div class="division-badge">CARGA EN TIEMPO REAL</div>
+        <div class="division-badge">ENCARGADO DE SECCIÓN</div>
       </div>
       <div class="stats-bar">
         <div class="stat"><div class="stat-val gold" id="s-fe">0</div><div class="stat-lbl">FUERZA EFECTIVA</div></div>
         <div class="stat"><div class="stat-val green" id="s-pr">0</div><div class="stat-lbl">PRESENTES</div></div>
         <div class="stat"><div class="stat-val red" id="s-au">0</div><div class="stat-lbl">AUSENTES</div></div>
       </div>
+      <div class="btn-row no-print">
+        <button class="btn btn-sm" onclick="abrirModalPersonal()">✎ EDITAR PERSONAL</button>
+        <button class="btn btn-sm btn-muted" onclick="abrirModalEstados()">+ AGREGAR ESTADO</button>
+      </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>JERARQUÍA</th><th>APELLIDO</th><th>ESTADO</th></tr></thead>
+          <thead><tr><th>JERARQUÍA</th><th>APELLIDO</th><th>NOMBRE</th><th>ESTADO</th></tr></thead>
           <tbody id="personal-tbody"></tbody>
         </table>
       </div>
     </div>
 
     <div id="section-general" style="display:none;">
-      <div class="division-header"><div class="division-title">PARTE GENERAL DIV. TANGO</div></div>
-      <div class="stats-bar">
-        <div class="stat"><div class="stat-val gold" id="g-fe">0</div><div class="stat-lbl">TOTAL DIVISIÓN</div></div>
+      <div class="division-header">
+        <div class="division-title">PARTE GENERAL — DIVISIÓN TANGO</div>
+      </div>
+      <div class="btn-row no-print">
+        <button class="btn" onclick="window.print()">▼ IMPRIMIR / PDF</button>
+        <button class="btn btn-muted" onclick="showSection('informe')">≡ INFORME HISTÓRICO</button>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;margin-bottom:1rem;" id="fecha-general"></div>
+      <div class="stats-bar" style="margin-bottom:1.5rem;">
+        <div class="stat"><div class="stat-val gold" id="g-fe">0</div><div class="stat-lbl">FUERZA EFECTIVA TOTAL</div></div>
         <div class="stat"><div class="stat-val green" id="g-pr">0</div><div class="stat-lbl">PRESENTES</div></div>
         <div class="stat"><div class="stat-val red" id="g-au">0</div><div class="stat-lbl">AUSENTES</div></div>
       </div>
-      <div id="div-summaries" style="margin-top:1.5rem;"></div>
-      <div id="ausentes-detalle" style="margin-top:1.5rem;"></div>
-      <button class="btn no-print" onclick="window.print()" style="margin-top:1.5rem; width:100%;">GENERAR PDF / IMPRIMIR</button>
+      <div class="gen-section">
+        <div class="gen-title">ENCARGADOS DIVISIÓN TANGO</div>
+        <div class="table-wrap" style="margin-bottom:0.5rem;">
+          <table><thead><tr><th>JERARQUÍA</th><th>APELLIDO</th><th>NOMBRE</th><th>ESTADO</th></tr></thead>
+          <tbody id="enc-tbody"></tbody></table>
+        </div>
+        <div class="btn-row no-print" style="margin-top:0.6rem;margin-bottom:0;">
+          <button class="btn btn-sm btn-muted" onclick="abrirModalEncargados()">✎ EDITAR ENCARGADOS</button>
+        </div>
+      </div>
+      <div class="gen-section">
+        <div class="gen-title">RESUMEN POR DIVISIÓN</div>
+        <div id="div-summaries"></div>
+      </div>
+      <div class="gen-section" id="ausentes-section" style="display:none;">
+        <div class="gen-title">DETALLE DE AUSENTES POR CAUSA</div>
+        <div id="ausentes-detalle"></div>
+      </div>
+    </div>
+
+    <div id="section-informe" style="display:none;">
+      <div class="division-header"><div class="division-title">INFORME HISTÓRICO</div></div>
+      <div class="btn-row no-print">
+        <button class="btn" onclick="showSection('general')">← VOLVER</button>
+        <button class="btn btn-red" onclick="limpiarHistorial()">✕ LIMPIAR HISTORIAL</button>
+      </div>
+      <div id="informe-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-encargados" style="display:none;">
+  <div class="modal">
+    <h3>EDITAR ENCARGADOS</h3>
+    <div id="modal-encargados-list"></div>
+    <div style="margin-top:1rem;padding-top:0.8rem;border-top:1px solid var(--border);">
+      <div class="modal-row">
+        <input class="modal-input" id="new-enc-jer" placeholder="Jerarquía" style="max-width:100px;"/>
+        <input class="modal-input" id="new-enc-ap" placeholder="Apellido"/>
+        <input class="modal-input" id="new-enc-nom" placeholder="Nombre"/>
+        <button class="btn btn-sm" onclick="agregarEncargado()">+</button>
+      </div>
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn" onclick="guardarEncargados()">GUARDAR</button>
+      <button class="btn btn-muted" onclick="cerrarModal('modal-encargados')">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-personal" style="display:none;">
+  <div class="modal">
+    <h3>EDITAR PERSONAL — <span id="modal-div-name"></span></h3>
+    <div id="modal-personal-list"></div>
+    <div style="margin-top:1rem;padding-top:0.8rem;border-top:1px solid var(--border);">
+      <div class="modal-row">
+        <input class="modal-input" id="new-jer" placeholder="Jerarquía" style="max-width:100px;"/>
+        <input class="modal-input" id="new-ap" placeholder="Apellido"/>
+        <input class="modal-input" id="new-nom" placeholder="Nombre"/>
+        <button class="btn btn-sm" onclick="agregarPersona()">+</button>
+      </div>
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn" onclick="guardarPersonal()">GUARDAR</button>
+      <button class="btn btn-muted" onclick="cerrarModal('modal-personal')">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-estados" style="display:none;">
+  <div class="modal">
+    <h3>GESTIONAR ESTADOS</h3>
+    <div id="modal-estados-list"></div>
+    <div style="margin-top:1rem;padding-top:0.8rem;border-top:1px solid var(--border);">
+      <div class="modal-row">
+        <input class="modal-input" id="new-estado-input" placeholder="Nombre..."/>
+        <button class="btn btn-sm" onclick="agregarEstado()">+</button>
+      </div>
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn btn-muted" onclick="cerrarModal('modal-estados')">CERRAR</button>
     </div>
   </div>
 </div>
@@ -169,7 +309,7 @@ td{padding:0.6rem 0.9rem;font-size:0.85rem;border-bottom:1px solid var(--border)
   import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
   const firebaseConfig = {
-    apiKey: "AIzaSyBWV4AZIy-Mgo-1ryoPS_BHQSZRXSNtZ4",
+    apiKey: "AIzaSyBWV4AZIy-Mgo-1ryoFS_BHQSZRXSNtZ4",
     authDomain: "division-tango-bnus.firebaseapp.com",
     databaseURL: "https://division-tango-bnus-default-rtdb.firebaseio.com",
     projectId: "division-tango-bnus",
@@ -186,120 +326,125 @@ td{padding:0.6rem 0.9rem;font-size:0.85rem;border-bottom:1px solid var(--border)
 </script>
 
 <script>
-const PASSWORDS={'general':'tango2026','Electricidad':'elec2026','Electrónica':'elect2026','Armas':'armas2026','Mecánica':'mec2026','Automotores':'auto2026','Auxiliares':'aux2026'};
+const PASSWORDS={'general':'tango2026','Electricidad':'elec2026','Electrónica':'elect2026','Armas':'armas2026','Mecánica':'mec2026','Automotores':'auto2026','Lucha Contra Incendio':'lci2026','Auxiliares':'aux2026'};
 const PERSONAL_BASE={
-  'Electricidad':[{jer:'SI',ap:'Enrique'},{jer:'SS',ap:'Torres'},{jer:'SS',ap:'Bordón'},{jer:'SS',ap:'Acosta'},{jer:'SS',ap:'Amaro'},{jer:'CP',ap:'Gallardo'},{jer:'CP',ap:'Gordillo'},{jer:'CI',ap:'Huanco'},{jer:'CI',ap:'Quispe'},{jer:'CS',ap:'Alejandro'}],
-  'Electrónica':[{jer:'SP',ap:'Guerrero'},{jer:'CP',ap:'Valdebenito'}],
-  'Armas':[{jer:'SP',ap:'Avendaño'},{jer:'SS',ap:'Roa'},{jer:'CP',ap:'Sobrecasas'},{jer:'CP',ap:'Fernandez'},{jer:'CI',ap:'Leonetti'}],
-  'Mecánica':[{jer:'SPMQ',ap:'Stalldecker'},{jer:'SS',ap:'Pistan'},{jer:'SS',ap:'Gutiérrez'},{jer:'SS',ap:'Quintero'},{jer:'SS',ap:'Casimiro'},{jer:'CI',ap:'Toconas'},{jer:'CI',ap:'Alvarez'},{jer:'MS',ap:'Mathier'}],
-  'Automotores':[{jer:'SP',ap:'Santa María'},{jer:'SI',ap:'Castro'},{jer:'CP',ap:'Vera'},{jer:'CI',ap:'Li Destri'},{jer:'CS',ap:'Aguirre'},{jer:'CS',ap:'Giménez'},{jer:'CS',ap:'Martinez'}],
-  'Auxiliares':[{jer:'SP',ap:'Calapeña'},{jer:'SS',ap:'Stark'},{jer:'SS',ap:'Contrera'},{jer:'CP',ap:'Figueroa'},{jer:'CI',ap:'Casquet'},{jer:'CI',ap:'Bazan'},{jer:'CI',ap:'Suruguay'},{jer:'MS',ap:'Lazarte'}]
+  'Electricidad':[{jer:'SI',ap:'Enrique',nom:''},{jer:'SS',ap:'Torres',nom:''},{jer:'SS',ap:'Bordón',nom:''},{jer:'SS',ap:'Acosta',nom:''},{jer:'SS',ap:'Amaro',nom:''},{jer:'CP',ap:'Gallardo',nom:''},{jer:'CP',ap:'Gordillo',nom:''},{jer:'CI',ap:'Huanco',nom:''},{jer:'CI',ap:'Quispe',nom:''},{jer:'CS',ap:'Alejandro',nom:''}],
+  'Electrónica':[{jer:'SP',ap:'Guerrero',nom:''},{jer:'CP',ap:'Valdebenito',nom:''}],
+  'Auxiliares':[{jer:'SP',ap:'Calapeña',nom:''},{jer:'SS',ap:'Stark',nom:''},{jer:'SS',ap:'Contrera',nom:''},{jer:'CP',ap:'Figueroa',nom:''},{jer:'CI',ap:'Casquet',nom:''},{jer:'CI',ap:'Bazan',nom:''},{jer:'CI',ap:'Suruguay',nom:''},{jer:'MS',ap:'Lazarte',nom:''}],
+  'Armas':[{jer:'SP',ap:'Avendaño',nom:''},{jer:'SS',ap:'Roa',nom:''},{jer:'CP',ap:'Sobrecasas',nom:''},{jer:'CP',ap:'Fernandez',nom:''},{jer:'CI',ap:'Leonetti',nom:''}],
+  'Lucha Contra Incendio':[{jer:'SI',ap:'Bustos',nom:''},{jer:'CI',ap:'Romero',nom:''}],
+  'Automotores':[{jer:'SP',ap:'Santa María',nom:''},{jer:'SI',ap:'Castro',nom:''},{jer:'CP',ap:'Vera',nom:''},{jer:'CI',ap:'Li Destri',nom:''},{jer:'CS',ap:'Aguirre',nom:''},{jer:'CS',ap:'Giménez',nom:''},{jer:'CS',ap:'Martinez',nom:''}],
+  'Mecánica':[{jer:'SPMQ',ap:'Stalldecker',nom:''},{jer:'SS',ap:'Pistan',nom:''},{jer:'SS',ap:'Gutiérrez',nom:''},{jer:'SS',ap:'Quintero',nom:''},{jer:'SS',ap:'Casimiro',nom:''},{jer:'CI',ap:'Toconas',nom:''},{jer:'CI',ap:'Alvarez',nom:''},{jer:'MS',ap:'Mathier',nom:''}],
 };
-
-const ESTADOS=['presente','sin causa','autorizado','turno médico','sin servicio','puesto de trabajo','guardia entrante','guardia saliente'];
+const DIVISIONES=Object.keys(PERSONAL_BASE);
+const ESTADOS_BASE=['presente','sin causa','autorizado','turno médico','sin servicio','puesto de trabajo','guardia entrante','guardia saliente'];
 const HOY_KEY=new Date().toISOString().split('T')[0];
-let selectedSec=null;
+const HOY=new Date().toLocaleDateString('es-AR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).toUpperCase();
 
+let currentUser=null,currentRole=null,currentDiv=null, estados={};
+
+function lsGet(k){const d=localStorage.getItem(k);return d?JSON.parse(d):null;}
+function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v));}
+
+// LOGICA NUBE
+async function saveEstados(div, e){
+  lsSet(`bnu_est_${div}_${HOY_KEY}`, e);
+  if(window.fdb) await window.fset(window.fref(window.fdb, `asistencia/${HOY_KEY}/${div}`), e);
+}
+
+async function loadEstados(div){
+  if(!window.fdb) return lsGet(`bnu_est_${div}_${HOY_KEY}`) || {};
+  const snap = await window.fget(window.fref(window.fdb, `asistencia/${HOY_KEY}/${div}`));
+  return snap.exists() ? snap.val() : (lsGet(`bnu_est_${div}_${HOY_KEY}`) || {});
+}
+
+// FUNCIONES LOGIN
 function selectSection(sec,btn){
-  selectedSec=sec;
+  currentUser=sec;
   document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('sel'));
   btn.classList.add('sel');
   document.getElementById('pwd-area').style.display='block';
 }
 
 async function submitPwd(){
-  const val=document.getElementById('pwd-field').value;
-  if(val===PASSWORDS[selectedSec]){
-    initApp(selectedSec);
-  } else {
-    document.getElementById('pwd-error').style.display='block';
-  }
+  if(document.getElementById('pwd-field').value===PASSWORDS[currentUser]) await doLogin(currentUser);
+  else document.getElementById('pwd-error').style.display='block';
 }
 
-async function initApp(sec){
+async function doLogin(sec){
+  currentRole=sec==='general'?'general':'division';
+  currentDiv=sec==='general'?null:sec;
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
-  document.getElementById('nav-user').textContent=sec.toUpperCase();
+  document.getElementById('nav-user').textContent=sec==='general'?'ENCARGADO DIV TANGO':'DIV. '+sec.toUpperCase();
 
-  if(sec==='general'){
+  if(currentRole==='general'){
+    document.getElementById('nav-informe').style.display='inline-block';
+    window.fonValue(window.fref(window.fdb, `asistencia/${HOY_KEY}`), () => loadGeneral());
     showSection('general');
-    listenGeneral();
   } else {
+    estados = await loadEstados(sec);
+    if(Object.keys(estados).length===0) getPersonal(sec).forEach((_,i)=>estados[i]='presente');
     showSection('main');
-    document.getElementById('div-title').textContent='SECCIÓN '+sec.toUpperCase();
-    listenSeccion(sec);
+    renderDivision(sec);
   }
 }
 
-function listenSeccion(div){
-  window.fonValue(window.fref(window.fdb, `asistencia/${HOY_KEY}/${div}`), (snap) => {
-    const data = snap.val() || {};
-    const tbody = document.getElementById('personal-tbody');
-    tbody.innerHTML = '';
-    let pr=0;
-    PERSONAL_BASE[div].forEach((p,i)=>{
-      const est = data[i] || 'presente';
-      if(est==='presente') pr++;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${p.jer}</td><td>${p.ap}</td>
-        <td><select class="estado-select ${est==='presente'?'presente':'ausente'}" onchange="updateEst('${div}',${i},this.value)">
-        ${ESTADOS.map(e=>`<option value="${e}" ${e===est?'selected':''}>${e.toUpperCase()}</option>`).join('')}
-        </select></td>`;
-      tbody.appendChild(tr);
-    });
-    document.getElementById('s-fe').textContent=PERSONAL_BASE[div].length;
-    document.getElementById('s-pr').textContent=pr;
-    document.getElementById('s-au').textContent=PERSONAL_BASE[div].length - pr;
+function getPersonal(div){return lsGet('bnu_personal_'+div)||PERSONAL_BASE[div];}
+
+function renderDivision(div){
+  document.getElementById('div-title').textContent='DIVISIÓN '+div.toUpperCase();
+  const tbody=document.getElementById('personal-tbody');
+  tbody.innerHTML='';
+  const pers=getPersonal(div), ops=lsGet('bnu_estados_opciones')||[...ESTADOS_BASE];
+  pers.forEach((p,i)=>{
+    const est=estados[i]||'presente';
+    tbody.innerHTML+=`<tr><td class="jerarquia">${p.jer}</td><td>${p.ap}</td><td>${p.nom||''}</td>
+    <td><select class="estado-select ${est==='presente'?'presente':'ausente'}" onchange="updateEst('${div}',${i},this)">
+    ${ops.map(o=>`<option value="${o}" ${o===est?'selected':''}>${o.toUpperCase()}</option>`).join('')}</select></td></tr>`;
   });
+  updateStats(div);
 }
 
-function updateEst(div, idx, val){
-  window.fset(window.fref(window.fdb, `asistencia/${HOY_KEY}/${div}/${idx}`), val);
+function updateEst(div,idx,sel){
+  estados[idx]=sel.value;
+  sel.className=`estado-select ${sel.value==='presente'?'presente':'ausente'}`;
+  saveEstados(div,estados);
+  updateStats(div);
 }
 
-function listenGeneral(){
-  window.fonValue(window.fref(window.fdb, `asistencia/${HOY_KEY}`), (snap) => {
-    const data = snap.val() || {};
-    let tFE=0, tPR=0, sumH='', ausH='';
-    const ausMap={};
+function updateStats(div){
+  const fe=getPersonal(div).length, pr=Object.values(estados).filter(e=>e==='presente').length;
+  document.getElementById('s-fe').textContent=fe;
+  document.getElementById('s-pr').textContent=pr;
+  document.getElementById('s-au').textContent=fe-pr;
+}
 
-    Object.keys(PERSONAL_BASE).forEach(div=>{
-      const divData = data[div] || {};
-      let dPR=0;
-      PERSONAL_BASE[div].forEach((p,i)=>{
-        const est = divData[i] || 'presente';
-        if(est==='presente') dPR++;
-        else {
-          if(!ausMap[est]) ausMap[est]=[];
-          ausMap[est].push({j:p.jer, a:p.ap, d:div});
-        }
-      });
-      tFE+=PERSONAL_BASE[div].length; tPR+=dPR;
-      sumH += `<div class="div-summary"><div class="div-name">${div}</div>
-        <div class="div-stat"><div class="val">${PERSONAL_BASE[div].length}</div><div class="lbl">FE</div></div>
-        <div class="div-stat"><div class="val green">${dPR}</div><div class="lbl">P</div></div>
-        <div class="div-stat"><div class="val red">${PERSONAL_BASE[div].length-dPR}</div><div class="lbl">A</div></div></div>`;
+async function loadGeneral(){
+  let tFE=0, tPR=0, sumH='', ausH='', ausMap={};
+  for(const div of DIVISIONES){
+    const est=await loadEstados(div), pers=getPersonal(div), fe=pers.length, pr=Object.values(est).filter(e=>e==='presente').length;
+    tFE+=fe; tPR+=pr;
+    pers.forEach((p,i)=>{
+      const e=est[i]||'presente';
+      if(e!=='presente'){ if(!ausMap[e]) ausMap[e]=[]; ausMap[e].push({j:p.jer,a:p.ap,d:div}); }
     });
-
-    document.getElementById('g-fe').textContent=tFE;
-    document.getElementById('g-pr').textContent=tPR;
-    document.getElementById('g-au').textContent=tFE-tPR;
-    document.getElementById('div-summaries').innerHTML=sumH;
-
-    Object.keys(ausMap).forEach(est=>{
-      ausH += `<div class="ausentes-box"><div class="ausentes-group-title">▎ ${est.toUpperCase()}</div>
-        ${ausMap[est].map(p=>`<div class="ausente-item"><span class="ausente-jer">${p.j}</span><span>${p.a}</span><span class="ausente-div-lbl">${p.d}</span></div>`).join('')}</div>`;
-    });
-    document.getElementById('ausentes-detalle').innerHTML=ausH;
-  });
+    sumH+=`<div class="div-summary"><div class="div-name">${div}</div><div class="div-stat"><div class="val gold">${fe}</div><div class="lbl">FE</div></div>
+    <div class="div-stat"><div class="val green">${pr}</div><div class="lbl">P</div></div><div class="div-stat"><div class="val red">${fe-pr}</div><div class="lbl">A</div></div></div>`;
+  }
+  document.getElementById('g-fe').textContent=tFE; document.getElementById('g-pr').textContent=tPR; document.getElementById('g-au').textContent=tFE-tPR;
+  document.getElementById('div-summaries').innerHTML=sumH;
+  document.getElementById('ausentes-detalle').innerHTML=Object.keys(ausMap).map(e=>`<div class="ausentes-box"><div class="ausentes-group-title">▎ ${e.toUpperCase()}</div>
+  ${ausMap[e].map(p=>`<div class="ausente-item"><span class="ausente-jer">${p.j}</span><span>${p.a}</span><span class="ausente-div-lbl">${p.d}</span></div>`).join('')}</div>`).join('');
 }
 
 function showSection(s){
-  document.getElementById('section-main').style.display = s==='main'?'block':'none';
-  document.getElementById('section-general').style.display = s==='general'?'block':'none';
+  document.getElementById('section-main').style.display=s==='main'?'block':'none';
+  document.getElementById('section-general').style.display=s==='general'?'block':'none';
 }
 
-document.getElementById('header-date').textContent = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+document.getElementById('header-date').textContent=HOY;
+function logout(){location.reload();}
 </script>
 </body>
 </html>
