@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BNUS - División Tango - Tiempo Real</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0d0f12;--bg2:#13161b;--bg3:#1a1e25;--border:#2a2f38;
+  --accent:#c8a84b;--accent2:#e8c96a;--text:#e8e9ea;--muted:#6b7280;
+  --green:#1a4731;--green-text:#4ade80;--green-border:#16a34a;
+  --red:#4a1a1a;--red-text:#f87171;--red-border:#dc2626;
+  --font-display:'Bebas Neue',sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+  --font-body:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;}
+.header{background:var(--bg2);border-bottom:2px solid var(--accent);padding:0.9rem 2rem;display:flex;align-items:center;justify-content:space-between;}
+.header-title{font-family:var(--font-display);font-size:1.8rem;letter-spacing:0.1em;color:var(--accent);}
+.header-sub{font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);letter-spacing:0.15em;margin-top:2px;}
+.header-date{font-family:var(--font-mono);font-size:0.75rem;color:var(--accent2);text-align:right;}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:80vh;padding:2rem;}
+.login-card{background:var(--bg2);border:1px solid var(--border);border-top:3px solid var(--accent);padding:2.5rem;width:420px;max-width:100%;}
+.login-card h2{font-family:var(--font-display);font-size:1.6rem;letter-spacing:0.08em;color:var(--accent);margin-bottom:0.3rem;}
+.login-card p{font-size:0.72rem;color:var(--muted);font-family:var(--font-mono);margin-bottom:1.5rem;letter-spacing:0.08em;}
+.login-section-label{font-family:var(--font-mono);font-size:0.6rem;color:var(--accent);letter-spacing:0.15em;margin-bottom:0.6rem;margin-top:1rem;}
+.login-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;}
+.user-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:0.8rem 1rem;text-align:left;cursor:pointer;transition:all .2s;font-family:var(--font-body);width:100%;}
+.user-btn:hover,.user-btn.sel{border-color:var(--accent);background:rgba(200,168,75,0.07);}
+.user-btn .role{font-size:0.6rem;font-family:var(--font-mono);color:var(--accent);letter-spacing:0.1em;margin-bottom:3px;}
+.user-btn .name{font-size:0.9rem;font-weight:500;}
+.login-divider{border:none;border-top:1px solid var(--border);margin:1.2rem 0;}
+.pwd-row{display:flex;gap:0.5rem;margin-top:0.5rem;}
+.pwd-input{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.8rem;padding:0.5rem 0.75rem;flex:1;outline:none;}
+.pwd-input:focus{border-color:var(--accent);}
+.pwd-submit{font-family:var(--font-mono);font-size:0.7rem;padding:0.5rem 1rem;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;}
+.pwd-submit:hover{background:var(--accent);color:var(--bg);}
+.pwd-error{font-family:var(--font-mono);font-size:0.7rem;color:var(--red-text);margin-top:0.4rem;display:none;}
+#app{display:none;}
+.nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;flex-wrap:wrap;}
+.nav-btn{font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.07em;padding:0.9rem 1.1rem;background:transparent;border:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.nav-spacer{flex:1;}
+.nav-user{font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);padding:0.9rem 0.5rem;}
+.logout-btn{font-family:var(--font-mono);font-size:0.68rem;background:transparent;border:1px solid var(--border);color:var(--muted);padding:0.35rem 0.8rem;cursor:pointer;margin:0.5rem;}
+.logout-btn:hover{border-color:var(--red-border);color:var(--red-text);}
+.content{padding:1.5rem 2rem;}
+.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);margin-bottom:1.5rem;}
+.stat{background:var(--bg2);padding:1rem 1.2rem;}
+.stat-val{font-family:var(--font-display);font-size:2rem;letter-spacing:0.05em;line-height:1;}
+.stat-lbl{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.12em;color:var(--muted);margin-top:3px;}
+.stat-val.green{color:var(--green-text);}
+.stat-val.red{color:var(--red-text);}
+.stat-val.gold{color:var(--accent);}
+.division-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.2rem;flex-wrap:wrap;}
+.division-title{font-family:var(--font-display);font-size:1.6rem;letter-spacing:0.08em;color:var(--accent);}
+.division-badge{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.12em;background:rgba(200,168,75,0.1);border:1px solid var(--accent);color:var(--accent);padding:3px 9px;}
+.table-wrap{background:var(--bg2);border:1px solid var(--border);overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:480px;}
+thead{background:var(--bg3);}
+th{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.12em;color:var(--muted);padding:0.7rem 0.9rem;text-align:left;border-bottom:1px solid var(--border);}
+td{padding:0.6rem 0.9rem;font-size:0.85rem;border-bottom:1px solid var(--border);vertical-align:middle;}
+.jerarquia{font-family:var(--font-mono);font-size:0.78rem;color:var(--accent2);font-weight:500;}
+.nombre-cell{font-weight:500;}
+.estado-select{font-family:var(--font-mono);font-size:0.72rem;padding:4px 7px;border:1px solid var(--border);cursor:pointer;width:100%;transition:all .2s;background:var(--bg3);color:var(--text);}
+.estado-select.presente{background:var(--green);border-color:var(--green-border);color:var(--green-text);}
+.estado-select.ausente{background:var(--red);border-color:var(--red-border);color:var(--red-text);}
+.btn{font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.06em;padding:0.55rem 1.2rem;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;transition:all .2s;}
+.btn:hover{background:var(--accent);color:var(--bg);}
+.div-summary{background:var(--bg2);border:1px solid var(--border);padding:1rem 1.2rem;margin-bottom:0.4rem;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;align-items:center;gap:0.8rem;}
+.div-name{font-family:var(--font-display);font-size:0.95rem;letter-spacing:0.06em;}
+.div-stat{text-align:center;}
+.div-stat .val{font-family:var(--font-mono);font-size:1rem;font-weight:500;}
+.div-stat .lbl{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;color:var(--muted);}
+.ausentes-box{background:var(--bg2);border:1px solid var(--border);margin-bottom:0.6rem;}
+.ausentes-group-title{font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.12em;color:var(--accent2);padding:5px 10px;background:rgba(200,168,75,0.06);border-bottom:1px solid var(--border);border-left:2px solid var(--accent);}
+.ausente-item{font-size:0.85rem;padding:5px 10px;border-bottom:1px solid var(--border);display:flex;gap:0.8rem;align-items:center;}
+.ausente-item:last-child{border-bottom:none;}
+.ausente-jer{font-family:var(--font-mono);font-size:0.75rem;color:var(--accent2);min-width:55px;}
+.ausente-div-lbl{font-family:var(--font-mono);font-size:0.62rem;color:var(--muted);margin-left:auto;}
+@media print{ .no-print{display:none!important;} }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">BASE NAVAL USHUAIA</div>
+    <div class="header-sub">SISTEMA DE PRESENTISMO — DIVISIÓN TANGO</div>
+  </div>
+  <div class="header-date" id="header-date"></div>
+</div>
+
+<div id="login-screen">
+  <div class="login-card">
+    <h2>ACCESO SEGURO</h2>
+    <p>SELECCIONE SU SECCIÓN</p>
+
+    <button class="user-btn" onclick="selectSection('general',this)" style="margin-bottom:1rem; border-left: 3px solid var(--accent2);">
+      <div class="role">CONTROL GENERAL</div>
+      <div class="name">Encargado de División</div>
+    </button>
+
+    <div class="login-section-label">▎ SECCIONES</div>
+    <div class="login-btn-grid">
+      <button class="user-btn" onclick="selectSection('Electricidad',this)"><div class="role">SECCIÓN</div><div class="name">Electricidad</div></button>
+      <button class="user-btn" onclick="selectSection('Electrónica',this)"><div class="role">SECCIÓN</div><div class="name">Electrónica</div></button>
+      <button class="user-btn" onclick="selectSection('Armas',this)"><div class="role">SECCIÓN</div><div class="name">Armas</div></button>
+      <button class="user-btn" onclick="selectSection('Mecánica',this)"><div class="role">SECCIÓN</div><div class="name">Mecánica</div></button>
+      <button class="user-btn" onclick="selectSection('Automotores',this)"><div class="role">SECCIÓN</div><div class="name">Automotores</div></button>
+      <button class="user-btn" onclick="selectSection('Auxiliares',this)"><div class="role">SECCIÓN</div><div class="name">Auxiliares</div></button>
+    </div>
+
+    <div id="pwd-area" style="margin-top:1.5rem;display:none;">
+      <div class="pwd-row">
+        <input class="pwd-input" type="password" id="pwd-field" placeholder="Contraseña..."/>
+        <button class="pwd-submit" onclick="submitPwd()">ENTRAR</button>
+      </div>
+      <div class="pwd-error" id="pwd-error">Contraseña incorrecta.</div>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="nav">
+    <button class="nav-btn active" onclick="showSection('main')">PANEL PRINCIPAL</button>
+    <div class="nav-spacer"></div>
+    <span class="nav-user" id="nav-user"></span>
+    <button class="logout-btn" onclick="location.reload()">SALIR</button>
+  </div>
+
+  <div class="content">
+    <div id="section-main">
+      <div class="division-header">
+        <div class="division-title" id="div-title"></div>
+        <div class="division-badge">CARGA EN TIEMPO REAL</div>
+      </div>
+      <div class="stats-bar">
+        <div class="stat"><div class="stat-val gold" id="s-fe">0</div><div class="stat-lbl">FUERZA EFECTIVA</div></div>
+        <div class="stat"><div class="stat-val green" id="s-pr">0</div><div class="stat-lbl">PRESENTES</div></div>
+        <div class="stat"><div class="stat-val red" id="s-au">0</div><div class="stat-lbl">AUSENTES</div></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>JERARQUÍA</th><th>APELLIDO</th><th>ESTADO</th></tr></thead>
+          <tbody id="personal-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="section-general" style="display:none;">
+      <div class="division-header"><div class="division-title">PARTE GENERAL DIV. TANGO</div></div>
+      <div class="stats-bar">
+        <div class="stat"><div class="stat-val gold" id="g-fe">0</div><div class="stat-lbl">TOTAL DIVISIÓN</div></div>
+        <div class="stat"><div class="stat-val green" id="g-pr">0</div><div class="stat-lbl">PRESENTES</div></div>
+        <div class="stat"><div class="stat-val red" id="g-au">0</div><div class="stat-lbl">AUSENTES</div></div>
+      </div>
+      <div id="div-summaries" style="margin-top:1.5rem;"></div>
+      <div id="ausentes-detalle" style="margin-top:1.5rem;"></div>
+      <button class="btn no-print" onclick="window.print()" style="margin-top:1.5rem; width:100%;">GENERAR PDF / IMPRIMIR</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBWV4AZIy-Mgo-1ryoPS_BHQSZRXSNtZ4",
+    authDomain: "division-tango-bnus.firebaseapp.com",
+    databaseURL: "https://division-tango-bnus-default-rtdb.firebaseio.com",
+    projectId: "division-tango-bnus",
+    storageBucket: "division-tango-bnus.firebasestorage.app",
+    messagingSenderId: "831659639251",
+    appId: "1:831659639251:web:2a8cded99d4a2271252f26",
+    measurementId: "G-44EDJW93PP"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  window.fdb = db; window.fref = ref; window.fset = set; window.fonValue = onValue; window.fget = get;
+</script>
+
+<script>
+const PASSWORDS={'general':'tango2026','Electricidad':'elec2026','Electrónica':'elect2026','Armas':'armas2026','Mecánica':'mec2026','Automotores':'auto2026','Auxiliares':'aux2026'};
+const PERSONAL_BASE={
+  'Electricidad':[{jer:'SI',ap:'Enrique'},{jer:'SS',ap:'Torres'},{jer:'SS',ap:'Bordón'},{jer:'SS',ap:'Acosta'},{jer:'SS',ap:'Amaro'},{jer:'CP',ap:'Gallardo'},{jer:'CP',ap:'Gordillo'},{jer:'CI',ap:'Huanco'},{jer:'CI',ap:'Quispe'},{jer:'CS',ap:'Alejandro'}],
+  'Electrónica':[{jer:'SP',ap:'Guerrero'},{jer:'CP',ap:'Valdebenito'}],
+  'Armas':[{jer:'SP',ap:'Avendaño'},{jer:'SS',ap:'Roa'},{jer:'CP',ap:'Sobrecasas'},{jer:'CP',ap:'Fernandez'},{jer:'CI',ap:'Leonetti'}],
+  'Mecánica':[{jer:'SPMQ',ap:'Stalldecker'},{jer:'SS',ap:'Pistan'},{jer:'SS',ap:'Gutiérrez'},{jer:'SS',ap:'Quintero'},{jer:'SS',ap:'Casimiro'},{jer:'CI',ap:'Toconas'},{jer:'CI',ap:'Alvarez'},{jer:'MS',ap:'Mathier'}],
+  'Automotores':[{jer:'SP',ap:'Santa María'},{jer:'SI',ap:'Castro'},{jer:'CP',ap:'Vera'},{jer:'CI',ap:'Li Destri'},{jer:'CS',ap:'Aguirre'},{jer:'CS',ap:'Giménez'},{jer:'CS',ap:'Martinez'}],
+  'Auxiliares':[{jer:'SP',ap:'Calapeña'},{jer:'SS',ap:'Stark'},{jer:'SS',ap:'Contrera'},{jer:'CP',ap:'Figueroa'},{jer:'CI',ap:'Casquet'},{jer:'CI',ap:'Bazan'},{jer:'CI',ap:'Suruguay'},{jer:'MS',ap:'Lazarte'}]
+};
+
+const ESTADOS=['presente','sin causa','autorizado','turno médico','sin servicio','puesto de trabajo','guardia entrante','guardia saliente'];
+const HOY_KEY=new Date().toISOString().split('T')[0];
+let selectedSec=null;
+
+function selectSection(sec,btn){
+  selectedSec=sec;
+  document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  document.getElementById('pwd-area').style.display='block';
+}
+
+async function submitPwd(){
+  const val=document.getElementById('pwd-field').value;
+  if(val===PASSWORDS[selectedSec]){
+    initApp(selectedSec);
+  } else {
+    document.getElementById('pwd-error').style.display='block';
+  }
+}
+
+async function initApp(sec){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('nav-user').textContent=sec.toUpperCase();
+
+  if(sec==='general'){
+    showSection('general');
+    listenGeneral();
+  } else {
+    showSection('main');
+    document.getElementById('div-title').textContent='SECCIÓN '+sec.toUpperCase();
+    listenSeccion(sec);
+  }
+}
+
+function listenSeccion(div){
+  window.fonValue(window.fref(window.fdb, `asistencia/${HOY_KEY}/${div}`), (snap) => {
+    const data = snap.val() || {};
+    const tbody = document.getElementById('personal-tbody');
+    tbody.innerHTML = '';
+    let pr=0;
+    PERSONAL_BASE[div].forEach((p,i)=>{
+      const est = data[i] || 'presente';
+      if(est==='presente') pr++;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${p.jer}</td><td>${p.ap}</td>
+        <td><select class="estado-select ${est==='presente'?'presente':'ausente'}" onchange="updateEst('${div}',${i},this.value)">
+        ${ESTADOS.map(e=>`<option value="${e}" ${e===est?'selected':''}>${e.toUpperCase()}</option>`).join('')}
+        </select></td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('s-fe').textContent=PERSONAL_BASE[div].length;
+    document.getElementById('s-pr').textContent=pr;
+    document.getElementById('s-au').textContent=PERSONAL_BASE[div].length - pr;
+  });
+}
+
+function updateEst(div, idx, val){
+  window.fset(window.fref(window.fdb, `asistencia/${HOY_KEY}/${div}/${idx}`), val);
+}
+
+function listenGeneral(){
+  window.fonValue(window.fref(window.fdb, `asistencia/${HOY_KEY}`), (snap) => {
+    const data = snap.val() || {};
+    let tFE=0, tPR=0, sumH='', ausH='';
+    const ausMap={};
+
+    Object.keys(PERSONAL_BASE).forEach(div=>{
+      const divData = data[div] || {};
+      let dPR=0;
+      PERSONAL_BASE[div].forEach((p,i)=>{
+        const est = divData[i] || 'presente';
+        if(est==='presente') dPR++;
+        else {
+          if(!ausMap[est]) ausMap[est]=[];
+          ausMap[est].push({j:p.jer, a:p.ap, d:div});
+        }
+      });
+      tFE+=PERSONAL_BASE[div].length; tPR+=dPR;
+      sumH += `<div class="div-summary"><div class="div-name">${div}</div>
+        <div class="div-stat"><div class="val">${PERSONAL_BASE[div].length}</div><div class="lbl">FE</div></div>
+        <div class="div-stat"><div class="val green">${dPR}</div><div class="lbl">P</div></div>
+        <div class="div-stat"><div class="val red">${PERSONAL_BASE[div].length-dPR}</div><div class="lbl">A</div></div></div>`;
+    });
+
+    document.getElementById('g-fe').textContent=tFE;
+    document.getElementById('g-pr').textContent=tPR;
+    document.getElementById('g-au').textContent=tFE-tPR;
+    document.getElementById('div-summaries').innerHTML=sumH;
+
+    Object.keys(ausMap).forEach(est=>{
+      ausH += `<div class="ausentes-box"><div class="ausentes-group-title">▎ ${est.toUpperCase()}</div>
+        ${ausMap[est].map(p=>`<div class="ausente-item"><span class="ausente-jer">${p.j}</span><span>${p.a}</span><span class="ausente-div-lbl">${p.d}</span></div>`).join('')}</div>`;
+    });
+    document.getElementById('ausentes-detalle').innerHTML=ausH;
+  });
+}
+
+function showSection(s){
+  document.getElementById('section-main').style.display = s==='main'?'block':'none';
+  document.getElementById('section-general').style.display = s==='general'?'block':'none';
+}
+
+document.getElementById('header-date').textContent = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+</script>
+</body>
+</html>
