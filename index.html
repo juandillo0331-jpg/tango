@@ -319,8 +319,8 @@ tr:hover td{background:rgba(255,255,255,0.02);}
     measurementId: "G-44EDJW93PP"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+  const firebaseApp = initializeApp(firebaseConfig);
+  const db = getDatabase(firebaseApp);
 
   window.fdb = db; window.fref = ref; window.fset = set; window.fonValue = onValue; window.fget = get;
 </script>
@@ -338,6 +338,8 @@ const PERSONAL_BASE={
 };
 const DIVISIONES=Object.keys(PERSONAL_BASE);
 const ESTADOS_BASE=['presente','sin causa','autorizado','turno médico','sin servicio','puesto de trabajo','guardia entrante','guardia saliente'];
+const PERSONAL_ENCARGADOS_BASE=[{jer:'',ap:'Encargado 1',nom:''},{jer:'',ap:'Encargado 2',nom:''}];
+
 const HOY_KEY=new Date().toISOString().split('T')[0];
 const HOY=new Date().toLocaleDateString('es-AR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).toUpperCase();
 
@@ -347,18 +349,14 @@ function lsGet(k){const d=localStorage.getItem(k);return d?JSON.parse(d):null;}
 function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v));}
 
 // LOGICA NUBE
-async function saveEstados(div, e){
-  lsSet(`bnu_est_${div}_${HOY_KEY}`, e);
-  if(window.fdb) await window.fset(window.fref(window.fdb, `asistencia/${HOY_KEY}/${div}`), e);
-}
+async function cloudSave(path, val){ if(window.fdb) await window.fset(window.fref(window.fdb, path), val); }
+async function cloudGet(path){ if(!window.fdb) return null; const s=await window.fget(window.fref(window.fdb, path)); return s.exists()?s.val():null; }
 
-async function loadEstados(div){
-  if(!window.fdb) return lsGet(`bnu_est_${div}_${HOY_KEY}`) || {};
-  const snap = await window.fget(window.fref(window.fdb, `asistencia/${HOY_KEY}/${div}`));
-  return snap.exists() ? snap.val() : (lsGet(`bnu_est_${div}_${HOY_KEY}`) || {});
-}
+function getPersonal(div){return lsGet('bnu_personal_'+div)||JSON.parse(JSON.stringify(PERSONAL_BASE[div]));}
+function getPersonalEncargados(){return lsGet('bnu_personal_encargados')||JSON.parse(JSON.stringify(PERSONAL_ENCARGADOS_BASE));}
+function getEstadosList(){return lsGet('bnu_estados_opciones')||[...ESTADOS_BASE];}
 
-// FUNCIONES LOGIN
+// LOGIN
 function selectSection(sec,btn){
   currentUser=sec;
   document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('sel'));
@@ -383,47 +381,54 @@ async function doLogin(sec){
     window.fonValue(window.fref(window.fdb, `asistencia/${HOY_KEY}`), () => loadGeneral());
     showSection('general');
   } else {
-    estados = await loadEstados(sec);
-    if(Object.keys(estados).length===0) getPersonal(sec).forEach((_,i)=>estados[i]='presente');
+    window.fonValue(window.fref(window.fdb, `asistencia/${HOY_KEY}/${sec}`), (snap) => {
+      estados = snap.val() || {};
+      if(Object.keys(estados).length===0) getPersonal(sec).forEach((_,i)=>estados[i]='presente');
+      renderDivision(sec);
+    });
     showSection('main');
-    renderDivision(sec);
   }
 }
 
-function getPersonal(div){return lsGet('bnu_personal_'+div)||PERSONAL_BASE[div];}
-
 function renderDivision(div){
   document.getElementById('div-title').textContent='DIVISIÓN '+div.toUpperCase();
-  const tbody=document.getElementById('personal-tbody');
-  tbody.innerHTML='';
-  const pers=getPersonal(div), ops=lsGet('bnu_estados_opciones')||[...ESTADOS_BASE];
+  const tbody=document.getElementById('personal-tbody'); tbody.innerHTML='';
+  const pers=getPersonal(div), ops=getEstadosList();
   pers.forEach((p,i)=>{
     const est=estados[i]||'presente';
     tbody.innerHTML+=`<tr><td class="jerarquia">${p.jer}</td><td>${p.ap}</td><td>${p.nom||''}</td>
-    <td><select class="estado-select ${est==='presente'?'presente':'ausente'}" onchange="updateEst('${div}',${i},this)">
+    <td><select class="estado-select ${est==='presente'?'presente':'ausente'}" onchange="updateEst('${div}',${i},this.value)">
     ${ops.map(o=>`<option value="${o}" ${o===est?'selected':''}>${o.toUpperCase()}</option>`).join('')}</select></td></tr>`;
   });
   updateStats(div);
 }
 
-function updateEst(div,idx,sel){
-  estados[idx]=sel.value;
-  sel.className=`estado-select ${sel.value==='presente'?'presente':'ausente'}`;
-  saveEstados(div,estados);
-  updateStats(div);
-}
+function updateEst(div,idx,val){ cloudSave(`asistencia/${HOY_KEY}/${div}/${idx}`, val); }
 
 function updateStats(div){
   const fe=getPersonal(div).length, pr=Object.values(estados).filter(e=>e==='presente').length;
-  document.getElementById('s-fe').textContent=fe;
-  document.getElementById('s-pr').textContent=pr;
-  document.getElementById('s-au').textContent=fe-pr;
+  document.getElementById('s-fe').textContent=fe; document.getElementById('s-pr').textContent=pr; document.getElementById('s-au').textContent=fe-pr;
 }
 
 async function loadGeneral(){
-  let tFE=0, tPR=0, sumH='', ausH='', ausMap={};
+  let tFE=0, tPR=0, sumH='', ausMap={};
+  const encP=getPersonalEncargados();
+  const encEst = await cloudGet(`asistencia/${HOY_KEY}/encargados`) || {};
+  
+  // Tabla Encargados
+  const tbodyEnc=document.getElementById('enc-tbody'); tbodyEnc.innerHTML='';
+  const ops=getEstadosList();
+  encP.forEach((p,i)=>{
+    const est=encEst[i]||'presente'; if(est==='presente') tPR++; tFE++;
+    tbodyEnc.innerHTML+=`<tr><td class="jerarquia">${p.jer}</td><td>${p.ap}</td><td>${p.nom||''}</td>
+    <td><select class="estado-select ${est==='presente'?'presente':'ausente'}" onchange="updateEst('encargados',${i},this.value)">
+    ${ops.map(o=>`<option value="${o}" ${o===est?'selected':''}>${o.toUpperCase()}</option>`).join('')}</select></td></tr>`;
+    if(est!=='presente'){ if(!ausMap[est]) ausMap[est]=[]; ausMap[est].push({j:p.jer,a:p.ap,d:'ENCARGADOS'}); }
+  });
+
   for(const div of DIVISIONES){
-    const est=await loadEstados(div), pers=getPersonal(div), fe=pers.length, pr=Object.values(est).filter(e=>e==='presente').length;
+    const est = await cloudGet(`asistencia/${HOY_KEY}/${div}`) || {};
+    const pers=getPersonal(div), fe=pers.length, pr=Object.values(est).filter(e=>e==='presente').length;
     tFE+=fe; tPR+=pr;
     pers.forEach((p,i)=>{
       const e=est[i]||'presente';
@@ -438,13 +443,17 @@ async function loadGeneral(){
   ${ausMap[e].map(p=>`<div class="ausente-item"><span class="ausente-jer">${p.j}</span><span>${p.a}</span><span class="ausente-div-lbl">${p.d}</span></div>`).join('')}</div>`).join('');
 }
 
-function showSection(s){
-  document.getElementById('section-main').style.display=s==='main'?'block':'none';
-  document.getElementById('section-general').style.display=s==='general'?'block':'none';
-}
-
-document.getElementById('header-date').textContent=HOY;
+// MODALES (Mantenidos igual pero con cloudSave)
+function abrirModalPersonal(){ modalPersonalDiv=currentDiv; modalPersonalTemp=JSON.parse(JSON.stringify(getPersonal(currentDiv))); document.getElementById('modal-div-name').textContent=currentDiv.toUpperCase(); renderModalPersonal(); document.getElementById('modal-personal').style.display='flex'; }
+function renderModalPersonal(){ document.getElementById('modal-personal-list').innerHTML=modalPersonalTemp.map((p,i)=>`<div class="person-edit-row"><input value="${p.jer}" oninput="modalPersonalTemp[${i}].jer=this.value" style="width:75px"><input value="${p.ap}" oninput="modalPersonalTemp[${i}].ap=this.value" style="flex:1"><button class="del-row-btn" onclick="modalPersonalTemp.splice(${i},1);renderModalPersonal()">✕</button></div>`).join(''); }
+function guardarPersonal(){ lsSet('bnu_personal_'+modalPersonalDiv, modalPersonalTemp); renderDivision(modalPersonalDiv); cerrarModal('modal-personal'); }
+function abrirModalEncargados(){ modalEncTemp=JSON.parse(JSON.stringify(getPersonalEncargados())); renderModalEncargados(); document.getElementById('modal-encargados').style.display='flex'; }
+function renderModalEncargados(){ document.getElementById('modal-encargados-list').innerHTML=modalEncTemp.map((p,i)=>`<div class="person-edit-row"><input value="${p.jer}" oninput="modalEncTemp[${i}].jer=this.value" style="width:75px"><input value="${p.ap}" oninput="modalEncTemp[${i}].ap=this.value" style="flex:1"><button class="del-row-btn" onclick="modalEncTemp.splice(${i},1);renderModalEncargados()">✕</button></div>`).join(''); }
+function guardarEncargados(){ lsSet('bnu_personal_encargados', modalEncTemp); loadGeneral(); cerrarModal('modal-encargados'); }
+function cerrarModal(id){document.getElementById(id).style.display='none';}
+function showSection(s){ document.getElementById('section-main').style.display=s==='main'?'block':'none'; document.getElementById('section-general').style.display=s==='general'?'block':'none'; }
 function logout(){location.reload();}
+document.getElementById('header-date').textContent=HOY;
 </script>
 </body>
 </html>
